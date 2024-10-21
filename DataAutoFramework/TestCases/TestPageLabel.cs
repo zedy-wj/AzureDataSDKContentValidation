@@ -10,7 +10,6 @@ namespace DataAutoFramework.TestCases
         public static List<string> TestLinks { get; set; }
         public static Dictionary<string, string> SpecialLinks { get; set; }
         public static List<string> ContentTestLinks { get; set; }
-        public static List<string> SiderTestLinks { get; set; }
 
         static TestPageLabel()
         {
@@ -26,11 +25,7 @@ namespace DataAutoFramework.TestCases
             ContentTestLinks = new List<string>
             {
                 "https://learn.microsoft.com/en-us/python/api/overview/azure/?view=azure-python"
-            };
-            SiderTestLinks = new List<string>
-            {
-                "https://learn.microsoft.com/en-us/python/api/overview/azure/advisor?view=azure-python"
-            };
+            }
         }
 
 
