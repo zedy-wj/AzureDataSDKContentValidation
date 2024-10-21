@@ -140,5 +140,46 @@ namespace DataAutoFramework.TestCases
             }
             ClassicAssert.Zero(errorList.Count, string.Join("\n", errorList));
         }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public async Task TestWrongLinks(string testLink)
+        {
+            string baseUri = "https://learn.microsoft.com/";
+
+            using var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+
+            await page.GotoAsync(testLink);
+
+            var links = await page.Locator("a").AllAsync();
+
+            var errorList = new List<string>();
+
+            foreach (var link in links)
+            {
+                var href = await link.GetAttributeAsync("href");
+                if (!string.IsNullOrEmpty(href) && !href.StartsWith("mailto"))
+                {
+                    if (href.StartsWith("#"))
+                    {
+                        href = testLink + href;
+                    }
+                    else if (!href.StartsWith("#") && !href.StartsWith("http") && !href.StartsWith("https") && !href.StartsWith("mailto:"))
+                    {
+                        href = baseUri + href;
+                    }
+                    if (!await ValidationHelper.CheckIfPageExist(href))
+                    {
+                        errorList.Add(href);
+                    }
+                }
+            }
+
+            await browser.CloseAsync();
+
+            ClassicAssert.Zero(errorList.Count, testLink + " has error link at " + string.Join(",", errorList));
+        }
     }
 }
