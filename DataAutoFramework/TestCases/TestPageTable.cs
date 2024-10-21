@@ -58,6 +58,7 @@ namespace DataAutoFramework.TestCases
             }
             
             await browser.CloseAsync();
+	    ClassicAssert.Zero(ErrorLinks.Count, testLink + " has table is empty" + string.Join(",", ErrorLinks));
         }
 
     }
