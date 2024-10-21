@@ -28,7 +28,7 @@ namespace DataAutoFramework.TestCases
 
         [Test]
         [TestCaseSource(nameof(TestLinks))]
-        public async Task TestExtraLabel(string testLink)
+        public async Task TestIsTableEmpty(string testLink)
         {
             var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
@@ -36,8 +36,22 @@ namespace DataAutoFramework.TestCases
             await page.GotoAsync(testLink);
 
             var tableLocator = page.Locator("table");
-            var isTableEmpty = await IsTableEmptyAsync(tableLocator);
+            var rows = await tableLocator.Locator("tr").AllAsync();
+            bool IsTableEmpty = false;
 
+	    foreach (var row in rows)
+            {
+                var cells = await row.Locator("td, th").AllAsync();
+                foreach (var cell in cells)
+                {
+                    var textContent = await cell.TextContentAsync();
+                    if (string.IsNullOrWhiteSpace(textContent))
+                    {
+                        IsTableEmpty = true;
+                        break;
+                    } 
+                }
+            }
             if (isTableEmpty)
             {
                 ErrorLinks.Add(testLink);
@@ -46,23 +60,6 @@ namespace DataAutoFramework.TestCases
             await browser.CloseAsync();
         }
 
-        [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        private async Task<bool> IsTableEmptyAsync(ILocator table)
-        {
-            var rows = await table.Locator("tr").AllAsync();
-
-            foreach (var row in rows)
-            {
-                var cells = await row.Locator("td, th").AllAsync();
-                foreach (var cell in cells)
-                {
-                    var textContent = await cell.TextContentAsync();
-                    if (string.IsNullOrWhiteSpace(textContent)) return true; 
-                }
-            }
-            return false;
-        }
     }
 
 }
