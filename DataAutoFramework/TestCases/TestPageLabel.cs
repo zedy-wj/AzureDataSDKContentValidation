@@ -87,44 +87,28 @@ namespace DataAutoFramework.TestCases
             var page = await browser.NewPageAsync();
             await page.GotoAsync(testLink);
             var paragraphs = await page.Locator("p").AllInnerTextsAsync();
-
+            var htmlContent = await page.Locator("html").InnerHTMLAsync();
+            var tagMatches = Regex.Matches(htmlContent, @"<\/\w+>\s*&gt;\s*<\/\w+>");
+            
             if (paragraphs != null)
             {
                 foreach (var paragraph in paragraphs)
                 {
-                    var matches = Regex.Matches(paragraph, @"[\[\]<>]");
+                    var paragraphMatches = Regex.Matches(paragraph, @"[\[\]<>]");
 
-                    foreach (Match match in matches)
+                    foreach (Match match in paragraphMatches)
                     {
                         errorList.Add(paragraph);
                     }
                 }
             }
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols of  " + string.Join(", ", errorList));
-        }
-
-        [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        public async Task TestUnnecessarySymbolsBetweenTags(string testLink)
-        {
-            var errorList = new List<string>();
-            var playwright = await Playwright.CreateAsync();
-            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-            var page = await browser.NewPageAsync();
-            await page.GotoAsync(testLink);
-            var htmlContent = await page.Locator("html").InnerHTMLAsync();
-            var matches = Regex.Matches(htmlContent, @"<\/\w+>\s*&gt;\s*<\/\w+>");
-
-            if (matches != null)
+            foreach (Match match in tagMatches)
             {
-                foreach (Match match in matches)
-                    {
-                         errorList.Add(match.Value);
-                    }
+                errorList.Add(match.Value);
             }
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols between tags: " + string.Join(", ", errorList));
+            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols :  " + string.Join(", ", errorList));
         }
     }
 }
