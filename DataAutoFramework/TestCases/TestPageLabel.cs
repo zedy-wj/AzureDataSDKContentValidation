@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
+using System.Text.RegularExpressions;
 
 namespace DataAutoFramework.TestCases
 {
@@ -74,6 +75,56 @@ namespace DataAutoFramework.TestCases
             await browser.CloseAsync();
 
             ClassicAssert.Zero(errorList.Count, testLink + " has extra label of  " + string.Join(",", errorList));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public async Task TestUnnecessarySymbolsInParagraph(string testLink)
+        {
+            var errorList = new List<string>();
+            var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+            await page.GotoAsync(testLink);
+            var paragraphs = await page.Locator("p").AllInnerTextsAsync();
+
+            if (paragraphs != null)
+            {
+                foreach (var paragraph in paragraphs)
+                {
+                    var matches = Regex.Matches(paragraph, @"[\[\]<>]");
+
+                    foreach (Match match in matches)
+                    {
+                        errorList.Add(paragraph);
+                    }
+                }
+            }
+
+            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols of  " + string.Join(", ", errorList));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public async Task TestUnnecessarySymbolsBetweenTags(string testLink)
+        {
+            var errorList = new List<string>();
+            var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+            await page.GotoAsync(testLink);
+            var htmlContent = await page.Locator("html").InnerHTMLAsync();
+            var matches = Regex.Matches(htmlContent, @"<\/\w+>\s*&gt;\s*<\/\w+>");
+
+            if (matches != null)
+            {
+                foreach (Match match in matches)
+                    {
+                         errorList.Add(match.Value);
+                    }
+            }
+
+            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary text between tags: " + string.Join(", ", errorList));
         }
     }
 }
