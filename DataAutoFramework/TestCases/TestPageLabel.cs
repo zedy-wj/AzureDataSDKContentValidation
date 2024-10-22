@@ -124,7 +124,7 @@ namespace DataAutoFramework.TestCases
                     }
             }
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary text between tags: " + string.Join(", ", errorList));
+            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols between tags: " + string.Join(", ", errorList));
         }
     }
 }
