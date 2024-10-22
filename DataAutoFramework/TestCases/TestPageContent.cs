@@ -67,10 +67,11 @@ namespace DataAutoFramework.TestCases
             var page = await browser.NewPageAsync();
 
             await page.GotoAsync(testLink);
+            await page.WaitForSelectorAsync("li.border-top.tree-item.is-expanded");
 
             var parentLi = await page.QuerySelectorAsync("li.border-top.tree-item.is-expanded");
 
-            var liElements = await parentLi.QuerySelectorAllAsync("ul.tree-group > li");
+            var liElements = await parentLi.QuerySelectorAllAsync("ul.tree-group > li[aria-level='2']");
 
             HashSet<string> set = new HashSet<string>();
             List<string> duplicateList = new List<string>();
