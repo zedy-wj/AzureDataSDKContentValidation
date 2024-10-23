@@ -1,4 +1,4 @@
-﻿using NUnit.Framework.Legacy;
+using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
 using System.Text.Json;
@@ -83,6 +83,25 @@ namespace DataAutoFramework.TestCases
             await browser.CloseAsync();
 
             ClassicAssert.Zero(duplicateList.Count, testLink + " has duplicate link at " + string.Join(",", duplicateList));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public void TestBlankNode(string testLink)
+        {
+            var blankNodeCount = 0;
+            var web = new HtmlWeb();
+            var doc = web.Load(testLink);
+            HtmlNodeCollection items = doc.DocumentNode.SelectNodes("//div[contains(@class, 'admonition seealso')]/ul[contains(@class, 'simple')]/li");
+            if(items != null && items.Count > 0)
+            {
+                foreach (var item in items)
+                {
+                    blankNodeCount += String.IsNullOrEmpty(item.InnerText) ? 1 : 0;
+                }
+            }
+            
+            ClassicAssert.Zero(blankNodeCount);
         }
     }
 }
