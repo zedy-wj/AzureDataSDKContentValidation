@@ -1,7 +1,11 @@
 ﻿using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
+<<<<<<< HEAD
 using Microsoft.Extensions.Configuration;
+=======
+using System.Text.RegularExpressions;
+>>>>>>> 06bb694ae78e184bdf157e439c66dc506ebb3dc8
 
 namespace DataAutoFramework.TestCases
 {
@@ -76,6 +80,50 @@ namespace DataAutoFramework.TestCases
             await browser.CloseAsync();
 
             ClassicAssert.Zero(errorList.Count, testLink + " has extra label of  " + string.Join(",", errorList));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public async Task TestUnnecessarySymbols(string testLink)
+        {
+            var errorList = new List<string>();
+            var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+            await page.GotoAsync(testLink);
+            var paragraphs = await page.Locator("p").AllInnerTextsAsync();
+            var tableContents = new List<string>();
+            var tableCount = await page.Locator("table").CountAsync();
+            
+            if (paragraphs != null)
+            {
+                foreach (var paragraph in paragraphs)
+                {
+                    var paragraphMatches = Regex.Matches(paragraph, @"[\[\]<>]|/{3}");
+
+                    foreach (Match match in paragraphMatches)
+                    {
+                        errorList.Add(paragraph);
+                    }
+                }
+            }
+
+            for (int i = 0; i < tableCount; i++)
+            {
+                var tableContent = await page.Locator("table").Nth(i).InnerHTMLAsync();
+                tableContents.Add(tableContent);
+            }
+
+            foreach (var tableContent in tableContents)
+            {
+                var tagMatches = Regex.Matches(tableContent, @"<\/\w+>\s*&gt;\s*<\/\w+>|~");
+                foreach (Match match in tagMatches)
+                {
+                    errorList.Add(match.Value);
+                }
+            }            
+
+            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols:\n" + string.Join("\n", errorList));
         }
     }
 }
