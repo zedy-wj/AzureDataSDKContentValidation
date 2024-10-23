@@ -79,7 +79,7 @@ namespace DataAutoFramework.TestCases
 
         [Test]
         [TestCaseSource(nameof(TestLinks))]
-        public async Task TestUnnecessarySymbolsInParagraph(string testLink)
+        public async Task TestUnnecessarySymbols(string testLink)
         {
             var errorList = new List<string>();
             var playwright = await Playwright.CreateAsync();
@@ -87,8 +87,8 @@ namespace DataAutoFramework.TestCases
             var page = await browser.NewPageAsync();
             await page.GotoAsync(testLink);
             var paragraphs = await page.Locator("p").AllInnerTextsAsync();
-            var htmlContent = await page.Locator("html").InnerHTMLAsync();
-            var tagMatches = Regex.Matches(htmlContent, @"<\/\w+>\s*&gt;\s*<\/\w+>");
+            var tableContents = new List<string>();
+            var tableCount = await page.Locator("table").CountAsync();
             
             if (paragraphs != null)
             {
@@ -103,10 +103,20 @@ namespace DataAutoFramework.TestCases
                 }
             }
 
-            foreach (Match match in tagMatches)
+            for (int i = 0; i < tableCount; i++)
             {
-                errorList.Add(match.Value);
+                var tableContent = await page.Locator("table").Nth(i).InnerHTMLAsync();
+                tableContents.Add(tableContent);
             }
+
+            foreach (var tableContent in tableContents)
+            {
+                var tagMatches = Regex.Matches(tableContent, @"<\/\w+>\s*&gt;\s*<\/\w+>|~");
+                foreach (Match match in tagMatches)
+                {
+                    errorList.Add(match.Value);
+                }
+            }            
 
             ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols:\n" + string.Join("\n", errorList));
         }
