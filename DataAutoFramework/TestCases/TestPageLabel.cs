@@ -1,11 +1,7 @@
 ﻿using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
-<<<<<<< HEAD
-using Microsoft.Extensions.Configuration;
-=======
 using System.Text.RegularExpressions;
->>>>>>> 06bb694ae78e184bdf157e439c66dc506ebb3dc8
 
 namespace DataAutoFramework.TestCases
 {
