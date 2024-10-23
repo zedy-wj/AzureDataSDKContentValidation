@@ -94,7 +94,7 @@ namespace DataAutoFramework.TestCases
             {
                 foreach (var paragraph in paragraphs)
                 {
-                    var paragraphMatches = Regex.Matches(paragraph, @"[\[\]<>]");
+                    var paragraphMatches = Regex.Matches(paragraph, @"[\[\]<>]|/{3}");
 
                     foreach (Match match in paragraphMatches)
                     {
