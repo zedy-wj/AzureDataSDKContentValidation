@@ -82,7 +82,7 @@ namespace DataAutoFramework.TestCases
 
         [Test]
         [TestCaseSource(nameof(TestLinks))]
-        public void TestGarbledText(string testLink)
+        public async Task TestGarbledText(string testLink)
         {
             var errorList = new List<string>();
             var playwright = await Playwright.CreateAsync();
@@ -90,24 +90,15 @@ namespace DataAutoFramework.TestCases
             var page = await browser.NewPageAsync();
             await page.GotoAsync(testLink);
             var pLocators = await page.Locator("p").AllAsync();
-            
-            string pattern_1 = @":[\w]+\s+[\w]+:";
-            string pattern_2 = @":[\w]+:";
-            bool containsSpecificText = false;
 
             foreach (var pLocator in pLocators)
             {
                 var text = await pLocator.TextContentAsync();
 
-                if (Regex.IsMatch(text, pattern_1) || Regex.IsMatch(text, pattern_2))
+                if (Regex.IsMatch(text, @":[\w]+\s+[\w]+:") || Regex.IsMatch(text, @":[\w]+:"))
                 {
-                    containsSpecificText = true;
-                    break;
+                    errorList.Add(text);
                 }
-            }
-            if (containsSpecificText)
-            {
-                errorList.Add(testLink);
             }
             
             await browser.CloseAsync();
@@ -127,7 +118,6 @@ namespace DataAutoFramework.TestCases
             var tableLocator = page.Locator("table");
             //var tableLocator = page.Locator("table:not([aria-label*='Package'])");
             var rows = await tableLocator.Locator("tr").AllAsync();
-            bool IsTableEmpty = false;
 
             foreach (var row in rows)
             {
@@ -137,14 +127,9 @@ namespace DataAutoFramework.TestCases
                     var textContent = await cell.TextContentAsync();
                     if (string.IsNullOrWhiteSpace(textContent))
                     {
-                        IsTableEmpty = true;
-                        break;
+                        errorList.Add(textContent);
                     } 
                 }
-            }
-            if(IsTableEmpty)
-            {
-                errorList.Add(testLink);
             }
             
             await browser.CloseAsync();
