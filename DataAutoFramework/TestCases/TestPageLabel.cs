@@ -108,7 +108,7 @@ namespace DataAutoFramework.TestCases
                 errorList.Add(match.Value);
             }
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols :  " + string.Join(", ", errorList));
+            ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols:\n" + string.Join("\n", errorList));
         }
     }
 }
