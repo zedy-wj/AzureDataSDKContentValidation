@@ -166,7 +166,7 @@ namespace DataAutoFramework.TestCases
                     {
                         href = testLink + href;
                     }
-                    else if (!href.StartsWith("#") && !href.StartsWith("http") && !href.StartsWith("https") && !href.StartsWith("mailto:"))
+                    else if (!href.StartsWith("#") && !href.StartsWith("http") && !href.StartsWith("https"))
                     {
                         href = baseUri + href;
                     }

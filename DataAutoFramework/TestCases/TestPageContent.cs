@@ -8,19 +8,11 @@ namespace DataAutoFramework.TestCases
     public class TestPageContent
     {
         public static List<string> TestLinks { get; set; }
-        public static Dictionary<string, string> SpecialLinks { get; set; }
         public static List<string> ContentTestLinks { get; set; }
 
         static TestPageContent()
         {
             TestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
-
-            SpecialLinks = new Dictionary<string, string>();
-
-            SpecialLinks.Add("Read in English", "https://learn.microsoft.com/en-us/python/api/overview/azure/app-configuration?view=azure-python");
-            SpecialLinks.Add("our contributor guide", "https://github.com/Azure/azure-sdk-for-python/blob/main/CONTRIBUTING.md");
-            // SpecialLinks.Add("English (United States)", "/en-us/locale?target=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fpython%2Fapi%2Foverview%2Fazure%2Fapp-configuration%3Fview%3Dazure-python");
-            SpecialLinks.Add("Privacy", "https://go.microsoft.com/fwlink/?LinkId=521839");
 
             ContentTestLinks = new List<string>
             {
@@ -47,7 +39,7 @@ namespace DataAutoFramework.TestCases
             foreach (var aElement in aElements)
             {
                 var textContent = await aElement.InnerTextAsync();
-                if (!set.Add(textContent)) //存在重复元素
+                if (!set.Add(textContent)) 
                 {
                     duplicateTexts.Add(textContent);
                 }
