@@ -85,16 +85,19 @@ namespace DataAutoFramework.TestCases
         public void TestGarbledText(string testLink)
         {
             var errorList = new List<string>();
-            var web = new HtmlWeb();
-            var doc = web.Load(testLink);
-            var pTags = doc.DocumentNode.SelectNodes("//p");
+            var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+            await page.GotoAsync(testLink);
+            var pLocators = await page.Locator("p").AllAsync();
+            
             string pattern_1 = @":[\w]+\s+[\w]+:";
             string pattern_2 = @":[\w]+:";
             bool containsSpecificText = false;
 
-            foreach (var pTag in pTags)
+            foreach (var pLocator in pLocators)
             {
-                var text = pTag.InnerText.Trim();
+                var text = await pLocator.TextContentAsync();
 
                 if (Regex.IsMatch(text, pattern_1) || Regex.IsMatch(text, pattern_2))
                 {
@@ -102,12 +105,12 @@ namespace DataAutoFramework.TestCases
                     break;
                 }
             }
-
             if (containsSpecificText)
             {
                 errorList.Add(testLink);
             }
             
+            await browser.CloseAsync();
             ClassicAssert.Zero(errorList.Count, testLink + " has garbled text" + string.Join(",", errorList));
         }
 
