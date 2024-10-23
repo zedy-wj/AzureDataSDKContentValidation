@@ -88,14 +88,15 @@ namespace DataAutoFramework.TestCases
             var web = new HtmlWeb();
             var doc = web.Load(testLink);
             var pTags = doc.DocumentNode.SelectNodes("//p");
-            string pattern = @":[\w]+\s+[\w]+:";
+            string pattern_1 = @":[\w]+\s+[\w]+:";
+            string pattern_2 = @":[\w]+:";
             bool containsSpecificText = false;
 
             foreach (var pTag in pTags)
             {
                 var text = pTag.InnerText.Trim();
 
-                if (Regex.IsMatch(text, pattern))
+                if (Regex.IsMatch(text, pattern_1) || Regex.IsMatch(text, pattern_2))
                 {
                     containsSpecificText = true;
                     break;
