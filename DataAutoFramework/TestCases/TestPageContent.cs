@@ -2,17 +2,21 @@ using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
 using System.Text.Json;
+using HtmlAgilityPack;
 
 namespace DataAutoFramework.TestCases
 {
     public class TestPageContent
     {
         public static List<string> TestLinks { get; set; }
+        public static List<string> SiderTestLinks { get; set; }
         public static List<string> ContentTestLinks { get; set; }
 
         static TestPageContent()
         {
             TestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
+
+            SiderTestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
 
             ContentTestLinks = new List<string>
             {
@@ -47,11 +51,11 @@ namespace DataAutoFramework.TestCases
 
             await browser.CloseAsync();
 
-            ClassicAssert.Zero(duplicateTexts.Count, testLink + " has duplicate link at " + string.Join(",", duplicateTexts));
+            ClassicAssert.Zero(duplicateTexts.Count, testLink + " has duplicate service at " + string.Join(",", duplicateTexts));
         }
 
         [Test]
-        [TestCaseSource(nameof(TestLinks))]
+        [TestCaseSource(nameof(SiderTestLinks))]
         public async Task TestDuplicateServiceBySider(string testLink)
         {
             using var playwright = await Playwright.CreateAsync();
@@ -82,7 +86,7 @@ namespace DataAutoFramework.TestCases
 
             await browser.CloseAsync();
 
-            ClassicAssert.Zero(duplicateList.Count, testLink + " has duplicate link at " + string.Join(",", duplicateList));
+            ClassicAssert.Zero(duplicateList.Count, testLink + " has duplicate service at " + string.Join(",", duplicateList));
         }
 
         [Test]

@@ -16,16 +16,17 @@ namespace DataAutoFramework.TestCases
 
         static TestPageLinks()
         {
-            TestLinks = new List<string>
-            {
-                "https://learn.microsoft.com/en-us/python/api/overview/azure/app-configuration?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/overview/azure/appconfiguration-readme?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio.azureappconfigurationclient?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.azureappconfigurationclient?view=azure-python"
-            };
-            // TestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
+            //TestLinks = new List<string>
+            //{
+            //    "https://learn.microsoft.com/en-us/python/api/overview/azure/app-configuration?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/overview/azure/appconfiguration-readme?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio.azureappconfigurationclient?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.azureappconfigurationclient?view=azure-python"
+            //};
+
+            TestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
 
             SpecialLinks = new Dictionary<string, string>();
 
@@ -33,35 +34,6 @@ namespace DataAutoFramework.TestCases
             SpecialLinks.Add("our contributor guide", "https://github.com/Azure/azure-sdk-for-python/blob/main/CONTRIBUTING.md");
             // SpecialLinks.Add("English (United States)", "/en-us/locale?target=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fpython%2Fapi%2Foverview%2Fazure%2Fapp-configuration%3Fview%3Dazure-python");
             SpecialLinks.Add("Privacy", "https://go.microsoft.com/fwlink/?LinkId=521839");
-        }
-        
-        [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        public async Task TestBrokenLinks(string testLink)
-        {
-
-            var baseUri =  testLink.Substring(0, testLink.LastIndexOf("/"));
-            var errorList = new List<string>();
-            var web = new HtmlWeb();
-            var doc = web.Load(testLink);
-            foreach (var link in doc.DocumentNode.SelectNodes("//a[@href]"))
-            {
-                var linkValue = link.Attributes["href"].Value;
-                if (linkValue.StartsWith("#"))
-                {
-                    linkValue = testLink + linkValue;
-                }
-                else if (!linkValue.StartsWith("#") && !linkValue.StartsWith("http") && !linkValue.StartsWith("https"))
-                {
-                    linkValue = baseUri + "/" + linkValue;
-                }
-                if(!await ValidationHelper.CheckIfPageExist(linkValue))
-                {
-                    errorList.Add(link.OuterHtml);
-                }
-            }
-            
-            ClassicAssert.Zero(errorList.Count, testLink + " has error link at " + string.Join(",", errorList));
         }
 
         [Test]
@@ -152,7 +124,7 @@ namespace DataAutoFramework.TestCases
 
         [Test]
         [TestCaseSource(nameof(TestLinks))]
-        public async Task TestWrongLinks(string testLink)
+        public async Task TestBrokenLinks(string testLink)
         {
             string baseUri = "https://learn.microsoft.com/";
 
