@@ -1,4 +1,4 @@
-﻿using NUnit.Framework.Legacy;
+using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
 using System.Text.Json;
