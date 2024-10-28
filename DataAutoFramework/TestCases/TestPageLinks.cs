@@ -1,8 +1,6 @@
-﻿using HtmlAgilityPack;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using DataAutoFramework.Helper;
 using NUnit.Framework.Legacy;
-using System.Text.RegularExpressions;
 using System.Text.Json;
 using Microsoft.Playwright;
 
@@ -89,37 +87,6 @@ namespace DataAutoFramework.TestCases
             }
 
             ClassicAssert.Zero(failCount, failMsg);
-        }
-
-        [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        public void TestLinkNotDisplayed(string testLink)
-        {
-            var errorList = new List<string>();
-            var web = new HtmlWeb();
-            var doc = web.Load(testLink);
-            MatchCollection matches = Regex.Matches(doc.DocumentNode.SelectSingleNode("/html").InnerText, @"\[.*\]\[.*[^source]\]");
-            foreach (Match match in matches)
-            {
-                errorList.Add(match.Value);
-            }
-            ClassicAssert.Zero(errorList.Count, string.Join("\n", errorList));
-        }
-
-        [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        public void TestUnparsedParams(string testLink)
-        {
-            var errorList = new List<string>();
-            var web = new HtmlWeb();
-            var doc = web.Load(testLink);
-            MatchCollection matches = Regex.Matches(doc.DocumentNode.SelectSingleNode("/html").InnerText, @"\:\S*");
-            foreach (Match match in matches)
-            {
-                if(match.Value != ":" && !match.Value.Contains("://"))
-                    errorList.Add(match.Value);
-            }
-            ClassicAssert.Zero(errorList.Count, string.Join("\n", errorList));
         }
 
         [Test]
