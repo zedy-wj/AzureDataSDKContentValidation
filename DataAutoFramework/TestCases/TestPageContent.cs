@@ -2,6 +2,8 @@
 using HtmlAgilityPack;
 using NUnit.Framework.Legacy;
 using NUnit.Framework;
+using System.Text.RegularExpressions;
+using Microsoft.Playwright;
 
 namespace DataAutoFramework.TestCases
 {
@@ -76,6 +78,62 @@ namespace DataAutoFramework.TestCases
             }
             
             ClassicAssert.Zero(blankNodeCount);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public async Task TestGarbledText(string testLink)
+        {
+            var errorList = new List<string>();
+            var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+            await page.GotoAsync(testLink);
+            var pLocators = await page.Locator("p").AllAsync();
+
+            foreach (var pLocator in pLocators)
+            {
+                var text = await pLocator.TextContentAsync();
+
+                if (Regex.IsMatch(text, @":[\w]+\s+[\w]+:") || Regex.IsMatch(text, @":[\w]+:"))
+                {
+                    errorList.Add(text);
+                }
+            }
+            
+            await browser.CloseAsync();
+            ClassicAssert.Zero(errorList.Count, testLink + " has garbled text" + string.Join(",", errorList));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public async Task TestIsTableEmpty(string testLink)
+        {
+            var errorList = new List<string>();
+            var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+            await page.GotoAsync(testLink);
+
+            var tableLocator = page.Locator("table");
+            //var tableLocator = page.Locator("table:not([aria-label*='Package'])");
+            var rows = await tableLocator.Locator("tr").AllAsync();
+
+            foreach (var row in rows)
+            {
+                var cells = await row.Locator("td, th").AllAsync();
+                foreach (var cell in cells)
+                {
+                    var textContent = await cell.TextContentAsync();
+                    if (string.IsNullOrWhiteSpace(textContent))
+                    {
+                        errorList.Add(textContent);
+                    } 
+                }
+            }
+            
+            await browser.CloseAsync();
+            ClassicAssert.Zero(errorList.Count, testLink + " has table is empty" + string.Join(",", errorList));
         }
     }
 }
