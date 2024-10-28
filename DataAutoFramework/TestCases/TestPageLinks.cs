@@ -16,16 +16,17 @@ namespace DataAutoFramework.TestCases
 
         static TestPageLinks()
         {
-            TestLinks = new List<string>
-            {
-                "https://learn.microsoft.com/en-us/python/api/overview/azure/app-configuration?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/overview/azure/appconfiguration-readme?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio.azureappconfigurationclient?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.azureappconfigurationclient?view=azure-python"
-            };
-            // TestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
+            //TestLinks = new List<string>
+            //{
+            //    "https://learn.microsoft.com/en-us/python/api/overview/azure/app-configuration?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/overview/azure/appconfiguration-readme?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio.azureappconfigurationclient?view=azure-python",
+            //    "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.azureappconfigurationclient?view=azure-python"
+            //};
+
+            TestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
 
             SpecialLinks = new Dictionary<string, string>();
 
@@ -33,35 +34,6 @@ namespace DataAutoFramework.TestCases
             SpecialLinks.Add("our contributor guide", "https://github.com/Azure/azure-sdk-for-python/blob/main/CONTRIBUTING.md");
             // SpecialLinks.Add("English (United States)", "/en-us/locale?target=https%3A%2F%2Flearn.microsoft.com%2Fen-us%2Fpython%2Fapi%2Foverview%2Fazure%2Fapp-configuration%3Fview%3Dazure-python");
             SpecialLinks.Add("Privacy", "https://go.microsoft.com/fwlink/?LinkId=521839");
-        }
-        
-        [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        public async Task TestBrokenLinks(string testLink)
-        {
-
-            var baseUri =  testLink.Substring(0, testLink.LastIndexOf("/"));
-            var errorList = new List<string>();
-            var web = new HtmlWeb();
-            var doc = web.Load(testLink);
-            foreach (var link in doc.DocumentNode.SelectNodes("//a[@href]"))
-            {
-                var linkValue = link.Attributes["href"].Value;
-                if (linkValue.StartsWith("#"))
-                {
-                    linkValue = testLink + linkValue;
-                }
-                else if (!linkValue.StartsWith("#") && !linkValue.StartsWith("http") && !linkValue.StartsWith("https"))
-                {
-                    linkValue = baseUri + "/" + linkValue;
-                }
-                if(!await ValidationHelper.CheckIfPageExist(linkValue))
-                {
-                    errorList.Add(link.OuterHtml);
-                }
-            }
-            
-            ClassicAssert.Zero(errorList.Count, testLink + " has error link at " + string.Join(",", errorList));
         }
 
         [Test]
@@ -148,6 +120,47 @@ namespace DataAutoFramework.TestCases
                     errorList.Add(match.Value);
             }
             ClassicAssert.Zero(errorList.Count, string.Join("\n", errorList));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestLinks))]
+        public async Task TestBrokenLinks(string testLink)
+        {
+            string baseUri = "https://learn.microsoft.com/";
+
+            using var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+
+            await page.GotoAsync(testLink);
+
+            var links = await page.Locator("a").AllAsync();
+
+            var errorList = new List<string>();
+
+            foreach (var link in links)
+            {
+                var href = await link.GetAttributeAsync("href");
+                if (!string.IsNullOrEmpty(href) && !href.StartsWith("mailto"))
+                {
+                    if (href.StartsWith("#"))
+                    {
+                        href = testLink + href;
+                    }
+                    else if (!href.StartsWith("#") && !href.StartsWith("http") && !href.StartsWith("https"))
+                    {
+                        href = baseUri + href;
+                    }
+                    if (!await ValidationHelper.CheckIfPageExist(href))
+                    {
+                        errorList.Add(href);
+                    }
+                }
+            }
+
+            await browser.CloseAsync();
+
+            ClassicAssert.Zero(errorList.Count, testLink + " has error link at " + string.Join(",", errorList));
         }
     }
 }

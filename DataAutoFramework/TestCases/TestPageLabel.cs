@@ -1,4 +1,4 @@
-﻿using NUnit.Framework.Legacy;
+using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
 using System.Text.RegularExpressions;
@@ -29,7 +29,7 @@ namespace DataAutoFramework.TestCases
         public async Task TestExtraLabel(string testLink)
         {
             var errorList = new List<string>();
-            var labelList = new List<string> { 
+            var labelList = new List<string> {
                 "<br",
                 "<h1",
                 "<h2",
@@ -90,7 +90,7 @@ namespace DataAutoFramework.TestCases
             var paragraphs = await page.Locator("p").AllInnerTextsAsync();
             var tableContents = new List<string>();
             var tableCount = await page.Locator("table").CountAsync();
-            
+
             if (paragraphs != null)
             {
                 foreach (var paragraph in paragraphs)
@@ -117,7 +117,7 @@ namespace DataAutoFramework.TestCases
                 {
                     errorList.Add(match.Value);
                 }
-            }            
+            }
 
             ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols:\n" + string.Join("\n", errorList));
         }

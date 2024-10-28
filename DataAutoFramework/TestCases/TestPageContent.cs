@@ -1,64 +1,93 @@
-﻿using DataAutoFramework.Helper;
-using HtmlAgilityPack;
 using NUnit.Framework.Legacy;
 using NUnit.Framework;
-using System.Text.RegularExpressions;
 using Microsoft.Playwright;
+using System.Text.Json;
+using HtmlAgilityPack;
+using System.Text.RegularExpressions;
 
 namespace DataAutoFramework.TestCases
 {
-    public class TestPageText
+    public class TestPageContent
     {
         public static List<string> TestLinks { get; set; }
+        public static List<string> SiderTestLinks { get; set; }
+        public static List<string> ContentTestLinks { get; set; }
 
-        static TestPageText()
+        static TestPageContent()
         {
-            TestLinks = new List<string>
+            TestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
+
+            SiderTestLinks = JsonSerializer.Deserialize<List<string>>(File.ReadAllText("appsettings.json")) ?? new List<string>();
+
+            ContentTestLinks = new List<string>
             {
-                "https://learn.microsoft.com/en-us/python/api/overview/azure/app-configuration?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/overview/azure/appconfiguration-readme?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.aio.azureappconfigurationclient?view=azure-python",
-                "https://learn.microsoft.com/en-us/python/api/azure-appconfiguration/azure.appconfiguration.azureappconfigurationclient?view=azure-python"
+                "https://learn.microsoft.com/en-us/python/api/overview/azure/?view=azure-python"
             };
         }
 
         [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        public async Task TestExtraChar(string testLink)
+        [TestCaseSource(nameof(ContentTestLinks))]
+        public async Task TestDuplicateServiceByContent(string testLink)
         {
-            var errorList = new List<string>();
-            var web = new HtmlWeb();
-            var doc = web.Load(testLink);
-            foreach (var item in doc.DocumentNode.SelectNodes("//p"))
+
+            using var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+
+            await page.GotoAsync(testLink);
+
+            HashSet<string> set = new HashSet<string>();
+            List<string> duplicateTexts = new List<string>();
+
+            var aElements = await page.Locator("li.has-three-text-columns-list-items.is-unstyled a[data-linktype='relative-path']").AllAsync();
+
+            foreach (var aElement in aElements)
             {
-                var text = item.InnerText.Trim();
-                if (text.StartsWith("â\u0080\u0099") || text.EndsWith("â\u0080\u0099") || text.StartsWith('~') || text.EndsWith('~'))
+                var textContent = await aElement.InnerTextAsync();
+                if (!set.Add(textContent)) 
                 {
-                    errorList.Add(text);
+                    duplicateTexts.Add(textContent);
                 }
             }
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has extra charactor of '-' and `~` at " + string.Join(",", errorList));
+            await browser.CloseAsync();
+
+            ClassicAssert.Zero(duplicateTexts.Count, testLink + " has duplicate service at " + string.Join(",", duplicateTexts));
         }
 
         [Test]
-        [TestCaseSource(nameof(TestLinks))]
-        public async Task TestCodeBlock(string testLink)
+        [TestCaseSource(nameof(SiderTestLinks))]
+        public async Task TestDuplicateServiceBySider(string testLink)
         {
-            var errorList = new List<string>();
-            var web = new HtmlWeb();
-            var doc = web.Load(testLink);
-            foreach (var item in doc.DocumentNode.SelectNodes("//div[contains(@class, 'notranslate')]"))
+            using var playwright = await Playwright.CreateAsync();
+            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var page = await browser.NewPageAsync();
+
+            await page.GotoAsync(testLink);
+            await page.WaitForSelectorAsync("li.border-top.tree-item.is-expanded");
+
+            var parentLi = await page.QuerySelectorAsync("li.border-top.tree-item.is-expanded");
+
+            var liElements = await parentLi.QuerySelectorAllAsync("ul.tree-group > li[aria-level='2']");
+
+            HashSet<string> set = new HashSet<string>();
+            List<string> duplicateList = new List<string>();
+
+            foreach (var element in liElements)
             {
-                var text = item.InnerText;
-                text = text.TrimEnd('\n');
-                var newCode = await ValidationHelper.ParsePythonCode(text);
-                Console.WriteLine(text);
+                var text = await element.InnerTextAsync();
+                if (text != "Overview")
+                {
+                    if (!set.Add(text))
+                    {
+                        duplicateList.Add(text);
+                    }
+                }
             }
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has wrong format" + string.Join(",", errorList));
+            await browser.CloseAsync();
+
+            ClassicAssert.Zero(duplicateList.Count, testLink + " has duplicate service at " + string.Join(",", duplicateList));
         }
 
         [Test]
