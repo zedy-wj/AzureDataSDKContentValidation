@@ -104,7 +104,7 @@ namespace DataAutoFramework.TestCases
             {
                 var text = await pLocator.TextContentAsync();
 
-                if (Regex.IsMatch(text, @":[\w]+\s+[\w]+:") || Regex.IsMatch(text, @":[\w]+:"))
+                if (Regex.IsMatch(text, @":[\w]+(?:\s+[\w]+){0,2}:"))
                 {
                     errorList.Add(text);
                 }
