@@ -90,6 +90,7 @@ namespace DataAutoFramework.TestCases
             var paragraphs = await page.Locator("p").AllInnerTextsAsync();
             var tableContents = new List<string>();
             var tableCount = await page.Locator("table").CountAsync();
+            var codeBlocks = await page.Locator("code").AllInnerTextsAsync();
 
             if (paragraphs != null)
             {
@@ -99,7 +100,7 @@ namespace DataAutoFramework.TestCases
 
                     foreach (Match match in paragraphMatches)
                     {
-                        errorList.Add(paragraph);
+                        errorList.Add($"The paragraph contains unnecessary symbol:{ paragraph}");
                     }
                 }
             }
@@ -115,7 +116,19 @@ namespace DataAutoFramework.TestCases
                 var tagMatches = Regex.Matches(tableContent, @"<\/\w+>\s*&gt;\s*<\/\w+>|~");
                 foreach (Match match in tagMatches)
                 {
-                    errorList.Add(match.Value);
+                    errorList.Add($"table contains unnecessary symbol: {match.Value}");
+                }
+            }
+
+            if (codeBlocks != null)
+            {
+                foreach (var codeBlock in codeBlocks)
+                {
+                    var tildeMatches = Regex.Matches(codeBlock, @"~");
+                    foreach (Match match in tildeMatches)
+                    {
+                        errorList.Add($"Code block contains unnecessary symbol: {match.Value}");
+                    }
                 }
             }
 
