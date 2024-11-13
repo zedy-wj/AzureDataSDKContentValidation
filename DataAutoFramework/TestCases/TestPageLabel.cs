@@ -1,4 +1,4 @@
-﻿using NUnit.Framework.Legacy;
+using NUnit.Framework.Legacy;
 using NUnit.Framework;
 using Microsoft.Playwright;
 using System.Text.RegularExpressions;
@@ -29,7 +29,7 @@ namespace DataAutoFramework.TestCases
         public async Task TestExtraLabel(string testLink)
         {
             var errorList = new List<string>();
-            var labelList = new List<string> { 
+            var labelList = new List<string> {
                 "<br",
                 "<h1",
                 "<h2",
@@ -90,7 +90,8 @@ namespace DataAutoFramework.TestCases
             var paragraphs = await page.Locator("p").AllInnerTextsAsync();
             var tableContents = new List<string>();
             var tableCount = await page.Locator("table").CountAsync();
-            
+            var codeBlocks = await page.Locator("code").AllInnerTextsAsync();
+
             if (paragraphs != null)
             {
                 foreach (var paragraph in paragraphs)
@@ -99,7 +100,7 @@ namespace DataAutoFramework.TestCases
 
                     foreach (Match match in paragraphMatches)
                     {
-                        errorList.Add(paragraph);
+                        errorList.Add($"The paragraph contains unnecessary symbol:{ paragraph}");
                     }
                 }
             }
@@ -115,9 +116,21 @@ namespace DataAutoFramework.TestCases
                 var tagMatches = Regex.Matches(tableContent, @"<\/\w+>\s*&gt;\s*<\/\w+>|~");
                 foreach (Match match in tagMatches)
                 {
-                    errorList.Add(match.Value);
+                    errorList.Add($"table contains unnecessary symbol: {match.Value}");
                 }
-            }            
+            }
+
+            if (codeBlocks != null)
+            {
+                foreach (var codeBlock in codeBlocks)
+                {
+                    var tildeMatches = Regex.Matches(codeBlock, @"~");
+                    foreach (Match match in tildeMatches)
+                    {
+                        errorList.Add($"Code block contains unnecessary symbol: {match.Value}");
+                    }
+                }
+            }
 
             ClassicAssert.Zero(errorList.Count, testLink + " has unnecessary symbols:\n" + string.Join("\n", errorList));
         }
