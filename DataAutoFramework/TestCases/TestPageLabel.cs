@@ -75,7 +75,7 @@ namespace DataAutoFramework.TestCases
 
             await browser.CloseAsync();
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has extra label of  " + string.Join(",", errorList));
+            ClassicAssert.Zero(errorList.Count, testLink + " has extra label : \n" + string.Join("\n", errorList));
         }
 
         [Test]

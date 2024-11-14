@@ -56,7 +56,7 @@ namespace DataAutoFramework.TestCases
 
             await browser.CloseAsync();
 
-            ClassicAssert.Zero(errorList.Count, testLink + " has  wrong type annotations of  " + string.Join(",", errorList));
+            ClassicAssert.Zero(errorList.Count, testLink + " has  wrong type annotations : \n " + string.Join("\n", errorList));
         }
 
         bool IsCorrectTypeAnnotation(string text)
@@ -222,8 +222,7 @@ namespace DataAutoFramework.TestCases
 
                     if (!IsCorrectTypeAnnotation(text))
                     {
-                        errorList.Add($"Missing type annotations : {key}");
-                        Console.WriteLine($"type argument : {text}");
+                        errorList.Add($"{key}     :       {text}");
                     }
                 }
             }
