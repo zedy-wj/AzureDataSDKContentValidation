@@ -1,8 +1,7 @@
 ﻿using NUnit.Framework;
-using DataAutoFramework.Helper;
 using NUnit.Framework.Legacy;
 using System.Text.Json;
-using Microsoft.Playwright;
+using DataAutoFramework.Utilities;
 
 namespace DataAutoFramework.TestCases
 {
@@ -38,53 +37,8 @@ namespace DataAutoFramework.TestCases
         [TestCaseSource(nameof(TestLinks))]
         public async Task TestCrossLinks(string testLink)
         {
-            var playwright = await Playwright.CreateAsync();
-            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-            var page = await browser.NewPageAsync();
-            await page.GotoAsync(testLink);
-
-            var hrefs = page.Locator("#main-column").Locator("a");
-            var failCount = 0;
-            var failMsg = "";
-
-            for(var index = 0; index < await hrefs.CountAsync(); index++)
-            {
-                var href = hrefs.Nth(index);
-                var attri = href.GetAttributeAsync("href").Result;
-                var text = href.InnerTextAsync().Result;
-
-                if (String.IsNullOrEmpty(text.Trim()) || text.Trim() == "English (United States)")
-                {
-                    continue;
-                }
-
-                if (SpecialLinks.ContainsKey(text.Trim()) && SpecialLinks[text.Trim()] == attri)
-                {
-                    continue;
-                }
-
-                var subContent = text.ToLower().Replace("-", " ").Replace("@", " ").Split(" ");
-                var flag = false;
-
-                foreach (string s in subContent)
-                {
-                    if (attri?.ToLower().Replace(".", "").Contains(s) ?? false)
-                    {
-                        flag = true;
-                        break;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-
-                if (!flag)
-                {
-                    failCount++;
-                    failMsg = failMsg + text.Trim() + ": " + attri + "\n";
-                }
-            }
+            var checkPageLinks = new CheckPageLinks();
+            var (failCount, failMsg) = await checkPageLinks.CheckCrossLinks(testLink, SpecialLinks);
 
             ClassicAssert.Zero(failCount, failMsg);
         }
@@ -93,39 +47,9 @@ namespace DataAutoFramework.TestCases
         [TestCaseSource(nameof(TestLinks))]
         public async Task TestBrokenLinks(string testLink)
         {
-            string baseUri = "https://learn.microsoft.com/";
-
-            using var playwright = await Playwright.CreateAsync();
-            var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-            var page = await browser.NewPageAsync();
-
-            await page.GotoAsync(testLink);
-
-            var links = await page.Locator("a").AllAsync();
-
             var errorList = new List<string>();
-
-            foreach (var link in links)
-            {
-                var href = await link.GetAttributeAsync("href");
-                if (!string.IsNullOrEmpty(href) && !href.StartsWith("mailto"))
-                {
-                    if (href.StartsWith("#"))
-                    {
-                        href = testLink + href;
-                    }
-                    else if (!href.StartsWith("#") && !href.StartsWith("http") && !href.StartsWith("https"))
-                    {
-                        href = baseUri + href;
-                    }
-                    if (!await ValidationHelper.CheckIfPageExist(href))
-                    {
-                        errorList.Add(href);
-                    }
-                }
-            }
-
-            await browser.CloseAsync();
+            var checkBrokenLinks = new CheckPageLinks();
+            await checkBrokenLinks.CheckBrokenLinks(testLink, errorList);
 
             ClassicAssert.Zero(errorList.Count, testLink + " has error link at " + string.Join(",", errorList));
         }
